@@ -19,8 +19,6 @@ Gem::Specification.new do |s|
 
   s.executables       = %w( rpush )
   s.description       = <<desc
-  Creates Gists (pastes) on gist.github.com from standard input or
-  arbitrary files. Can link to your GitHub account, create private gists,
-  and enable syntax highlighting.
+  Implements the Push genetic programming language with an interpreter and parser.
 desc
 end

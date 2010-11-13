@@ -6,11 +6,11 @@ require 'rpush'
 if ARGV.empty?
   RPush.repl
 elsif ARGV.first == '-e' and ARGV.length == 2
-  parser = Parser.new
-  puts RPush.eval(parser.parse(ARGV[1])).inspect
+  parser = RPush::Parser.new
+  puts RPush.eval(parser.parse(ARGV[1]))
 elsif ARGV.length == 1 and File.exist?(ARGV.first)
-  parser = Parser.new
-  puts RPush.eval(parser.parse(File.read(ARGV.first))).inspect
+  parser = RPush::Parser.new
+  puts RPush.eval(parser.parse(File.read(ARGV.first)))
 else
   puts "RPush: an implementation of Push 3.0 for genetic programming.
 Usage: rpush [file | -e \"form\"]
