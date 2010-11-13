@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+$LOAD_PATH << File.dirname(__FILE__) + '/../lib'
+
+require 'rpush'
+
+if ARGV.empty?
+  RPush.repl
+elsif ARGV.first == '-e' and ARGV.length == 2
+  parser = Parser.new
+  puts RPush.eval(parser.parse(ARGV[1])).inspect
+elsif ARGV.length == 1 and File.exist?(ARGV.first)
+  parser = Parser.new
+  puts RPush.eval(parser.parse(File.read(ARGV.first))).inspect
+else
+  puts "RPush: an implementation of Push 3.0 for genetic programming.
+Usage: rpush [file | -e \"form\"]
+  Invoking with no arguments enters a REPL
+  With one argument it loads that as a file
+  -e : evals a single form"
+  exit 1
+end
