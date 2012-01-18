@@ -1,7 +1,12 @@
 #!/usr/bin/env ruby
-$LOAD_PATH << File.dirname(__FILE__) + '/../lib'
 
-require 'rpush'
+begin
+  require 'rpush'
+rescue LoadError
+  lib_path = File.expand_path('../../lib', __FILE__)
+  $:.unshift(lib_path)
+  require "rpush"
+end
 
 if ARGV.empty?
   RPush.repl

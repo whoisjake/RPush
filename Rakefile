@@ -1,29 +1,46 @@
-require 'spec/rake/spectask'
+require "bundler"
 
-task :default => :spec
-Spec::Rake::SpecTask.new(:spec)
+Bundler.setup
+Bundler::GemHelper.install_tasks
 
-namespace :spec do
-  Spec::Rake::SpecTask.new(:rcov) do |t|
-    t.rcov = true
-    t.rcov_opts = %w{ --exclude ^/ --exclude ^spec/ --sort coverage }
+require "rake"
+require "yaml"
+
+require "rdoc/task"
+require "rspec/core/rake_task"
+
+desc "Run all examples"
+RSpec::Core::RakeTask.new(:spec) do |t|
+  t.rspec_opts = %w[--color]
+  t.verbose = false
+end
+
+task :clobber do
+  rm_rf 'pkg'
+  rm_rf 'tmp'
+  rm_rf 'coverage'
+end
+
+namespace :rcov do
+  task :cleanup do
+    rm_rf 'coverage.data'
+    rm_rf 'coverage'
   end
-  
-  namespace :rcov do
-    desc "Generate and view RCov report"
-    task :view => :rcov do
-      coverage_index = File.expand_path(File.join(File.dirname(__FILE__), 'coverage', 'index.html'))
-      sh "open file://#{coverage_index}"
-    end
+
+  RSpec::Core::RakeTask.new :spec do |t|
+    t.rcov = true
   end
 end
 
-require 'rake/rdoctask'
+task :rcov => ["rcov:cleanup", "rcov:spec"]
 
-namespace :docs do
-  desc "Generate and view RDoc documentation"
-  task :view => :docs do
-    doc_index = File.expand_path(File.join(File.dirname(__FILE__), 'doc', 'index.html'))
-    sh "open file://#{doc_index}"
-  end
+task(:release).clear_prerequisites.clear_actions
+
+task :default => [:spec]
+
+Rake::RDocTask.new do |rdoc|
+  rdoc.rdoc_dir = 'rdoc'
+  rdoc.title = "RPush gem"
+  rdoc.rdoc_files.include('README*')
+  rdoc.rdoc_files.include('lib/**/*.rb')
 end
