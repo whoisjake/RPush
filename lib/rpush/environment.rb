@@ -6,13 +6,21 @@ module RPush
     def initialize
       @stacks = {}
       @operations = {}
-      create_default_operations
+      create_default_operations!
       @bindings = {}
     end
     
     def push(stack,value)
       @stacks[stack] ||= []
       @stacks[stack] << value
+    end
+    
+    def pop(stack)
+      @stacks[stack].pop
+    end
+    
+    def size_of(stack)
+      @stacks[stack].nil? ? 0 : @stacks[stack].size
     end
     
     def apply(instruction)
@@ -23,16 +31,19 @@ module RPush
       when "INTEGER","FLOAT","BOOLEAN"
         func = @operations[type.downcase.to_sym][operator.upcase.to_sym]
         operands = []
-        func.arg_count.times do
-          val = @stacks[type.downcase.to_sym].pop
-          if val.nil?
-            raise "Not enough values on #{type} stack"
+        stack = type.downcase.to_sym
+        if size_of(stack) >= func.arg_count
+          func.arg_count.times do
+            val = pop(type.downcase.to_sym)
+            if val.nil?
+              raise "Not enough values on #{type} stack"
+            end
+            operands << val
           end
-          operands << val
-        end
-        stack,value = func.apply(operands)
-        unless stack == :noop
-          push(stack,value)
+          stack,value = func.apply(operands)
+          unless stack == :noop
+            push(stack,value)
+          end
         end
       else # it's a name
         if @bindings[type]
@@ -46,18 +57,19 @@ module RPush
     end
     
     def to_s
-      puts "Environment"
+      s = "Environment\n"
       @stacks.keys.each do |stack|
-        puts "#{stack.to_s.upcase} STACK: (#{@stacks[stack].join(",")})"
+        s += "#{stack.to_s.upcase} STACK: (#{@stacks[stack].join(",")})\n"
       end
+      s
     end
     
-    private
-    
-    def create_default_operations
+    def create_default_operations!
+      @operations = {}
+      
       @operations[:integer] = {}
       @operations[:integer][:'+'] = Operation.new("+",2, lambda {|args| [:integer,args[0] + args[1]]})
-      @operations[:integer][:'-'] = Operation.new("-",2, lambda {|args| [:integer,args[0] - args[1]]})
+      @operations[:integer][:'-'] = Operation.new("-",2, lambda {|args| [:integer,args[1] - args[0]]})
       @operations[:integer][:'*'] = Operation.new("*",2, lambda {|args| [:integer,args[0] * args[1]]})
       @operations[:integer][:'/'] = Operation.new("/",2, lambda {|args| args[1] == 0 ? [:noop] : [:integer, args[0] /args[1]]})
       @operations[:integer][:'%'] = Operation.new("%",2, lambda {|args| args[1] == 0 ? [:noop] : [:integer, args[0] % args[1]]})
